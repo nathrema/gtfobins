@@ -206,25 +206,31 @@ used_binaries = binary_names if len(binary_filter) == 0 else binary_filter
 if was_function_filter_specified:
     function_filter = list(map(lambda x: translate_long_function(x), function_filter))
 
-for original_binary in used_binaries:
+filtered_binaries = []
+for i,original_binary in enumerate(used_binaries):
     binary = os.path.basename(original_binary).strip()
-    if not binary in binaries or (was_function_filter_specified and not binary_has_functions(binaries[binary], function_filter)):
-        used_binaries.remove(original_binary)
 
-for i,binary in enumerate(used_binaries):
-    binary = os.path.basename(binary).strip()
-    if binary in binaries:
-        should_print_separator = not list_only and i < len(used_binaries) - 1
+    if not binary in binaries:
+        continue
 
-        print_binary_header(binary, binaries[binary], list_only)
-        if not list_only:
-            print_functions(binary, binaries[binary], function_filter)
+    if was_function_filter_specified and not binary_has_functions(binaries[binary], function_filter):
+        continue
 
-        if should_print_separator:
-            print_separator()
-    else:
-        if len(used_binaries) == 1:
-            print(f'no entry for {binary}')
+    if binary in filtered_binaries:
+        continue
+
+    filtered_binaries.append(binary)
+
+if len(filtered_binaries) == 0:
+    print("no entries")
+    exit()
+
+for i,binary in enumerate(filtered_binaries):
+    should_print_separator = not list_only and i < len(filtered_binaries) - 1
+
+    print_binary_header(binary, binaries[binary], list_only)
     if not list_only:
-        print()
+        print_functions(binary, binaries[binary], function_filter)
 
+    if should_print_separator:
+        print_separator()
