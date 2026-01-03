@@ -149,14 +149,23 @@ def print_binary_header(name,row,list_only):
         print(colored(name, attrs=['bold','reverse']))
         if description is not None:
             print(description)
+        print()
+
+def print_separator(char = '-'):
+    width = os.get_terminal_size().columns
+    print(char * width)
 
 def print_function(name,functions):
     if name is not None:
         print(colored(f'{name}', attrs=['bold']))
-    for item in functions:
+    has_multiple = len(functions) > 1
+
+    for i,item in enumerate(functions):
+        is_last = i == len(functions) - 1
+
+        if has_multiple:
+            print(f'method #{i + 1}')
         for entry,text in item.items():
-            #if entry == 'description':
-#                continue
             print(f'{text}')
 
 def binary_has_function(row,function):
@@ -196,19 +205,23 @@ used_binaries = binary_names if len(binary_filter) == 0 else binary_filter
 
 if was_function_filter_specified:
     function_filter = list(map(lambda x: translate_long_function(x), function_filter))
-    for original_binary in used_binaries:
-        binary = os.path.basename(original_binary).strip()
-        if not binary in binaries:
-            continue
-        if not binary_has_functions(binaries[binary], function_filter):
-            used_binaries.remove(original_binary)
 
-for binary in used_binaries:
+for original_binary in used_binaries:
+    binary = os.path.basename(original_binary).strip()
+    if not binary in binaries or (was_function_filter_specified and not binary_has_functions(binaries[binary], function_filter)):
+        used_binaries.remove(original_binary)
+
+for i,binary in enumerate(used_binaries):
     binary = os.path.basename(binary).strip()
     if binary in binaries:
+        should_print_separator = not list_only and i < len(used_binaries) - 1
+
         print_binary_header(binary, binaries[binary], list_only)
         if not list_only:
             print_functions(binary, binaries[binary], function_filter)
+
+        if should_print_separator:
+            print_separator()
     else:
         if len(used_binaries) == 1:
             print(f'no entry for {binary}')
