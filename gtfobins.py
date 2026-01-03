@@ -8,7 +8,7 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-GTFO_PATH = 'GTFOBins.github.io'
+GTFO_PATH = os.path.dirname(os.path.realpath(__file__)) + '/GTFOBins.github.io'
 
 def init(function_names):
     parser = argparse.ArgumentParser(prog='gtfobins',description='GTFOBins is a curated list of Unix binaries that can be used to bypass local security restrictions in misconfigured systems.')
