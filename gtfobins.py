@@ -16,9 +16,11 @@ def init(function_names):
     parser.add_argument('-f','--function',choices=function_names,nargs='*',help='filter results by function',action='append')
     parser.add_argument('-l','--list',help='print only binary names',default=False,action='store_true')
     parser.add_argument('-s','--stdin',help='read binary list from stdin',default=False,action='store_true')
+    parser.add_argument('-u','--update',help='update from GTFOBins',default=False,action='store_true')
     args = parser.parse_args()
 
-    if (args.binary is None or len(args.binary) == 0) and args.function is None and not args.stdin:
+    are_args_empty = (args.binary is None or len(args.binary) == 0) and args.function is None and not args.stdin
+    if are_args_empty and not args.update:
         parser.print_help()
         exit()
 
@@ -26,11 +28,11 @@ def init(function_names):
     if args.function is not None:
         function = list(map(lambda x: x[0], args.function))
 
-    return [args.binary, function, args.list, args.stdin]
+    return [are_args_empty, args.binary, function, args.list, args.stdin, args.update]
 
 def fetch_repo():
     if os.path.exists(GTFO_PATH):
-        os.system('cd GTFOBins.github.io && git pull 2>/dev/null')
+        os.system(f'cd {GTFO_PATH} && git pull 2>/dev/null')
     else:
         os.system('git clone https://github.com/GTFOBins/GTFOBins.github.io 2>/dev/null')
 
@@ -187,16 +189,20 @@ def print_functions(name,row,filter):
                 continue
             print_function(function,list)
 
-if not os.path.exists(GTFO_PATH):
-    print('updating...')
-    fetch_repo()
-
 functions = load_functions()
 function_names = list(functions.keys()) + list(map(lambda x: translate_short_function(x), functions.keys()))
-[binary_filter,function_filter,list_only,from_stdin] = init(function_names)
+[are_args_empty,binary_filter,function_filter,list_only,from_stdin,should_update] = init(function_names)
 binaries = load_binaries()
 binary_names = binaries.keys()
 was_function_filter_specified = function_filter is not None
+
+if should_update or not os.path.exists(GTFO_PATH):
+    print('updating...')
+    fetch_repo()
+    print('done\n')
+
+if are_args_empty:
+    exit()
 
 if from_stdin:
     for line in sys.stdin.readlines():
